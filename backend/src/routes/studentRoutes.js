@@ -1,0 +1,14 @@
+const express = require("express");
+const authenticate = require("../middleware/authMiddleware");
+const authorize = require("../middleware/roleMiddleware");
+const controller = require("../controllers/studentController");
+const asyncHandler = require("../middleware/asyncHandler");
+const router = express.Router();
+router.use(authenticate, authorize("student"));
+router.get("/profile", asyncHandler(controller.getProfile));
+router.put("/profile", asyncHandler(controller.updateProfile));
+router.get("/jobs", asyncHandler(controller.availableJobs));
+router.post("/jobs/:jobId/apply", asyncHandler(controller.applyToJob));
+router.get("/applications", asyncHandler(controller.applications));
+router.get("/dashboard", asyncHandler(controller.dashboard));
+module.exports = router;
