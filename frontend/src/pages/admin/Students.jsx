@@ -1,9 +1,6 @@
 import React from 'react'
 
-const students = [
-  { id: '1', name: 'Alex Student', email: 'alex@student.edu', branch: 'CSE' },
-  { id: '2', name: 'Priya Learner', email: 'priya@student.edu', branch: 'IT' },
-]
+const students = []
 
 export default function AdminStudents() {
   return (
@@ -20,7 +17,7 @@ export default function AdminStudents() {
             </tr>
           </thead>
           <tbody>
-            {students.map(s => (
+            {students.length ? students.map(s => (
               <tr key={s.id} className="border-t">
                 <td className="py-2">{s.name}</td>
                 <td className="py-2 text-gray-600">{s.email}</td>
@@ -30,7 +27,7 @@ export default function AdminStudents() {
                   <button className="text-sm text-red-600">Delete</button>
                 </td>
               </tr>
-            ))}
+            )) : <tr><td colSpan="4" className="py-4 text-gray-500">No student data is available.</td></tr>}
           </tbody>
         </table>
       </div>

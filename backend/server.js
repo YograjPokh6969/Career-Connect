@@ -4,6 +4,7 @@ const prisma = require("./src/config/db");
 const authRoutes = require("./src/routes/authRoutes");
 const studentRoutes = require("./src/routes/studentRoutes");
 const companyRoutes = require("./src/routes/companyRoutes");
+const publicRoutes = require("./src/routes/publicRoutes");
 const errorHandler = require("./src/middleware/errorMiddleware");
 
 const app = express();
@@ -28,6 +29,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/company", companyRoutes);
+app.use("/api/public", publicRoutes);
 
 app.get("/", (req, res) => {
   res.json({ success: true, message: "Career Connect API is running" });

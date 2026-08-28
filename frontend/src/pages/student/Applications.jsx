@@ -1,15 +1,20 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { apiRequest } from '../../utils/api'
 
 export default function StudentApplications() {
-  const apps = [
-    { id: '1', job: 'Frontend Developer', company: 'TechCorp', date: '2026-08-01', status: 'Applied' },
-    { id: '2', job: 'Data Analyst Intern', company: 'DataWorks', date: '2026-07-20', status: 'Shortlisted' },
-    { id: '3', job: 'Backend Engineer', company: 'FinServe', date: '2026-06-10', status: 'Rejected' },
-  ]
+  const [apps, setApps] = useState([])
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    apiRequest('/students/applications')
+      .then(({ data }) => setApps(data || []))
+      .catch((requestError) => setError(requestError.message))
+  }, [])
 
   return (
     <div>
       <h1 className="text-2xl font-semibold mb-4">My Applications</h1>
+      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
       <div className="bg-white p-4 rounded shadow-sm border">
         <table className="w-full text-left">
@@ -22,14 +27,14 @@ export default function StudentApplications() {
             </tr>
           </thead>
           <tbody>
-            {apps.map(a => (
-              <tr key={a.id} className="border-t">
-                <td className="py-2">{a.job}</td>
-                <td className="py-2 text-gray-600">{a.company}</td>
-                <td className="py-2 text-gray-600">{a.date}</td>
+            {apps.length ? apps.map(a => (
+              <tr key={a.application_id} className="border-t">
+                <td className="py-2">{a.job_postings.title}</td>
+                <td className="py-2 text-gray-600">{a.job_postings.company_id}</td>
+                <td className="py-2 text-gray-600">{new Date(a.applied_at).toLocaleDateString()}</td>
                 <td className="py-2">{a.status}</td>
               </tr>
-            ))}
+            )) : <tr><td colSpan="4" className="py-4 text-gray-500">No applications yet.</td></tr>}
           </tbody>
         </table>
       </div>

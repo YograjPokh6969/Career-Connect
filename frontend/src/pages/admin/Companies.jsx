@@ -1,9 +1,6 @@
 import React from 'react'
 
-const companies = [
-  { id: '1', name: 'TechCorp', email: 'hr@techcorp.com' },
-  { id: '2', name: 'DataWorks', email: 'careers@dataworks.com' },
-]
+const companies = []
 
 export default function AdminCompanies() {
   return (
@@ -19,7 +16,7 @@ export default function AdminCompanies() {
             </tr>
           </thead>
           <tbody>
-            {companies.map(c => (
+            {companies.length ? companies.map(c => (
               <tr key={c.id} className="border-t">
                 <td className="py-2">{c.name}</td>
                 <td className="py-2 text-gray-600">{c.email}</td>
@@ -29,7 +26,7 @@ export default function AdminCompanies() {
                   <button className="text-sm text-red-600">Reject</button>
                 </td>
               </tr>
-            ))}
+            )) : <tr><td colSpan="3" className="py-4 text-gray-500">No company data is available.</td></tr>}
           </tbody>
         </table>
       </div>

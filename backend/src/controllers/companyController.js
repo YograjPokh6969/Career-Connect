@@ -26,9 +26,28 @@ const updateProfile = async (req, res) => {
   const data = {};
   for (const field of fields)
     if (req.body[field] !== undefined) data[field] = req.body[field];
-  const profile = await prisma.company_profiles.update({
-    where: { company_id: req.user.userId },
-    data,
+  const profile = await prisma.$transaction(async (tx) => {
+    const profile = await tx.company_profiles.update({
+      where: { company_id: req.user.userId },
+      data,
+    });
+    if (req.body.full_name !== undefined || req.body.phone !== undefined)
+      await tx.users.update({
+        where: { user_id: req.user.userId },
+        data: {
+          ...(req.body.full_name !== undefined ? { full_name: req.body.full_name } : {}),
+          ...(req.body.phone !== undefined ? { phone: req.body.phone } : {}),
+        },
+      });
+    await tx.notifications.create({
+      data: {
+        user_id: req.user.userId,
+        notification_type: "system",
+        title: "Profile updated",
+        message: "Your company profile was updated successfully.",
+      },
+    });
+    return profile;
   });
   res.json({
     success: true,
@@ -66,18 +85,27 @@ const createJob = async (req, res) => {
       new Error("title, description and application_deadline are required"),
       { status: 400 },
     );
+  const deadline = new Date(application_deadline);
+  if (Number.isNaN(deadline.getTime()))
+    throw Object.assign(new Error("application_deadline must be a valid date"), { status: 400 });
+  const decimalFields = { salary_min, salary_max, min_cgpa };
+  for (const [field, value] of Object.entries(decimalFields))
+    if (value !== undefined && value !== "" && !Number.isFinite(Number(value)))
+      throw Object.assign(new Error(`${field} must be a valid number`), { status: 400 });
+  if (min_cgpa !== undefined && min_cgpa !== "" && (Number(min_cgpa) < 0 || Number(min_cgpa) > 9.99))
+    throw Object.assign(new Error("min_cgpa must be between 0 and 9.99"), { status: 400 });
   const job = await prisma.job_postings.create({
     data: {
       title,
       description,
-      application_deadline: new Date(application_deadline),
+      application_deadline: deadline,
       company_id: req.user.userId,
       job_type,
       location,
-      salary_min,
-      salary_max,
+      salary_min: salary_min === undefined || salary_min === "" ? undefined : Number(salary_min),
+      salary_max: salary_max === undefined || salary_max === "" ? undefined : Number(salary_max),
       openings: openings ? Number(openings) : undefined,
-      min_cgpa,
+      min_cgpa: min_cgpa === undefined || min_cgpa === "" ? undefined : Number(min_cgpa),
       eligible_department,
       eligible_degree,
       graduation_year_from,
@@ -120,6 +148,18 @@ const updateJob = async (req, res) => {
     data,
   });
   res.json({ success: true, message: "Job updated", data: job });
+};
+const deleteJob = async (req, res) => {
+  const jobId = BigInt(req.params.jobId);
+  const owned = await prisma.job_postings.findFirst({
+    where: { job_id: jobId, company_id: req.user.userId },
+  });
+  if (!owned) throw Object.assign(new Error("Job not found"), { status: 404 });
+  await prisma.job_postings.update({
+    where: { job_id: jobId },
+    data: { status: "closed" },
+  });
+  res.json({ success: true, message: "Job removed" });
 };
 const applicants = async (req, res) =>
   res.json({
@@ -200,6 +240,7 @@ module.exports = {
   jobs,
   createJob,
   updateJob,
+  deleteJob,
   applicants,
   updateApplicationStatus,
   dashboard,

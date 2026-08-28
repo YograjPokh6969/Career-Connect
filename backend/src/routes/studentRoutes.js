@@ -10,5 +10,6 @@ router.put("/profile", asyncHandler(controller.updateProfile));
 router.get("/jobs", asyncHandler(controller.availableJobs));
 router.post("/jobs/:jobId/apply", asyncHandler(controller.applyToJob));
 router.get("/applications", asyncHandler(controller.applications));
+router.get("/notifications", asyncHandler(controller.notifications));
 router.get("/dashboard", asyncHandler(controller.dashboard));
 module.exports = router;

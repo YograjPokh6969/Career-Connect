@@ -16,6 +16,7 @@ const errorHandler = (error, req, res, next) => {
       status = 404;
       message = "Requested record was not found";
     } else {
+      console.error(`Prisma error ${error.code}:`, error.message);
       status = 400;
       message = "Database operation could not be completed";
     }
