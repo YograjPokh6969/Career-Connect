@@ -37,7 +37,7 @@ export default function Navbar() {
           {user && (
             <>
               <div className="flex items-center gap-3">
-                <div className="text-sm text-gray-700">{user.name}</div>
+                <div className="text-sm text-gray-700">{user.full_name || user.name}</div>
                 <div className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">{user.role}</div>
                 <NavLink to={user.role === 'student' ? '/student/dashboard' : user.role === 'company' ? '/company/dashboard' : '/admin/dashboard'} className="text-gray-600 hover:text-blue-600">Dashboard</NavLink>
                 <button onClick={handleLogout} className="text-sm bg-red-50 text-red-600 px-3 py-1 rounded">Logout</button>

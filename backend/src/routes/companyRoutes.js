@@ -10,6 +10,7 @@ router.put("/profile", asyncHandler(controller.updateProfile));
 router.get("/jobs", asyncHandler(controller.jobs));
 router.post("/jobs", asyncHandler(controller.createJob));
 router.put("/jobs/:jobId", asyncHandler(controller.updateJob));
+router.delete("/jobs/:jobId", asyncHandler(controller.deleteJob));
 router.get("/jobs/:jobId/applications", asyncHandler(controller.applicants));
 router.patch(
   "/applications/:applicationId/status",

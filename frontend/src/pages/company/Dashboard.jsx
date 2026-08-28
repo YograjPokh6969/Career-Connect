@@ -1,21 +1,29 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { apiRequest } from '../../utils/api'
 
 export default function CompanyDashboard() {
-  const stats = [
-    { label: 'Jobs Posted', value: 12 },
-    { label: 'Applicants', value: 128 },
-    { label: 'Shortlisted', value: 8 },
-    { label: 'Interviews', value: 5 },
-  ]
+  const [dashboard, setDashboard] = useState({ jobs: [], applicants: [] })
+  const [error, setError] = useState('')
 
-  const recent = [
-    { id: '1', name: 'Alex Student', job: 'Frontend Developer', date: '2026-08-05' },
-    { id: '2', name: 'Priya Candidate', job: 'Backend Engineer', date: '2026-07-30' },
+  useEffect(() => {
+    apiRequest('/company/dashboard')
+      .then(({ data }) => setDashboard(data))
+      .catch((requestError) => setError(requestError.message))
+  }, [])
+
+  const { jobs, applicants } = dashboard
+  const stats = [
+    { label: 'Jobs Posted', value: jobs.length },
+    { label: 'Applicants', value: applicants.length },
+    { label: 'Shortlisted', value: applicants.filter(a => a.status === 'shortlisted').length },
+    { label: 'Interviews', value: 0 },
   ]
+  const recent = applicants.slice(0, 5)
 
   return (
     <div>
       <h1 className="text-2xl font-semibold mb-4">Company Dashboard</h1>
+      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {stats.map(s => (
@@ -37,13 +45,13 @@ export default function CompanyDashboard() {
             </tr>
           </thead>
           <tbody>
-            {recent.map(r => (
-              <tr key={r.id} className="border-t">
-                <td className="py-2">{r.name}</td>
-                <td className="py-2 text-gray-600">{r.job}</td>
-                <td className="py-2 text-gray-600">{r.date}</td>
+            {recent.length ? recent.map(r => (
+              <tr key={r.application_id} className="border-t">
+                <td className="py-2">{r.student_profiles.users.full_name}</td>
+                <td className="py-2 text-gray-600">{r.job_postings.title}</td>
+                <td className="py-2 text-gray-600">{new Date(r.applied_at).toLocaleDateString()}</td>
               </tr>
-            ))}
+            )) : <tr><td colSpan="3" className="py-4 text-gray-500">No applicants yet.</td></tr>}
           </tbody>
         </table>
       </section>

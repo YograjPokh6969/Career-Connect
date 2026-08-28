@@ -1,27 +1,39 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { setUser } from '../../utils/auth'
+import { setAuth } from '../../utils/auth'
+import { apiRequest } from '../../utils/api'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState('student')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // Demo login: save user to localStorage
-    const user = { email, role, name: role === 'student' ? 'Demo Student' : role === 'company' ? 'Demo Company' : 'Admin' }
-    setUser(user)
-    // navigate to role dashboard
-    if (role === 'student') navigate('/student/dashboard')
-    else if (role === 'company') navigate('/company/dashboard')
-    else navigate('/admin/dashboard')
+    setError('')
+    setLoading(true)
+    try {
+      const { data } = await apiRequest('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      })
+      if (data.user.role !== role) throw new Error(`This account is registered as ${data.user.role}`)
+      setAuth(data.user, data.token)
+      navigate(`/${data.user.role}/dashboard`)
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <div className="max-w-md mx-auto bg-white p-6 rounded shadow-sm">
       <h2 className="text-xl font-semibold mb-4">Login</h2>
+      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm text-gray-700">Email</label>
@@ -42,7 +54,7 @@ export default function Login() {
         </div>
 
         <div className="flex items-center justify-between">
-          <button className="bg-blue-600 text-white px-4 py-2 rounded">Login</button>
+          <button disabled={loading} className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50">{loading ? 'Logging in...' : 'Login'}</button>
           <Link to="/register" className="text-sm text-blue-600">Register</Link>
         </div>
       </form>

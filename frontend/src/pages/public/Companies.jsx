@@ -1,10 +1,16 @@
-import React, { useMemo, useState } from 'react'
-import { jobs } from '../../data/jobs'
+import React, { useEffect, useState } from 'react'
+import { apiRequest } from '../../utils/api'
 
 export default function Companies() {
   const [q, setQ] = useState('')
-  const companies = useMemo(() => Array.from(new Set(jobs.map(j=>j.company))), [])
-  const filtered = companies.filter(c => c.toLowerCase().includes(q.toLowerCase()))
+  const [companies, setCompanies] = useState([])
+  const [error, setError] = useState('')
+  useEffect(() => {
+    apiRequest('/public/companies')
+      .then(({ data }) => setCompanies(data))
+      .catch((requestError) => setError(requestError.message))
+  }, [])
+  const filtered = companies.filter(c => c.legal_name.toLowerCase().includes(q.toLowerCase()))
 
   return (
     <div>
@@ -13,9 +19,9 @@ export default function Companies() {
         <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search companies" className="w-full md:w-64 border rounded px-3 py-2" />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {filtered.map(c => (
-          <div key={c} className="bg-white p-4 rounded shadow-sm border">{c}</div>
-        ))}
+        {error && <p className="text-red-600">{error}</p>}
+        {!error && !filtered.length && <p className="text-gray-500">No companies are registered yet.</p>}
+        {filtered.map(c => <div key={c.company_id} className="bg-white p-4 rounded shadow-sm border">{c.legal_name}</div>)}
       </div>
     </div>
   )

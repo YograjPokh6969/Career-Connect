@@ -1,5 +1,5 @@
 import React from 'react'
-import { jobs } from '../../data/jobs'
+const jobs = []
 
 export default function AdminJobs() {
   return (
@@ -16,7 +16,7 @@ export default function AdminJobs() {
             </tr>
           </thead>
           <tbody>
-            {jobs.map(j => (
+            {jobs.length ? jobs.map(j => (
               <tr key={j.id} className="border-t">
                 <td className="py-2">{j.title}</td>
                 <td className="py-2 text-gray-600">{j.company}</td>
@@ -26,7 +26,7 @@ export default function AdminJobs() {
                   <button className="text-sm text-red-600">Remove</button>
                 </td>
               </tr>
-            ))}
+            )) : <tr><td colSpan="4" className="py-4 text-gray-500">No job data is available.</td></tr>}
           </tbody>
         </table>
       </div>
