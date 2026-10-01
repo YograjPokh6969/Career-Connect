@@ -1,4 +1,8 @@
 const prisma = require("../config/db");
+const fs = require("node:fs/promises");
+const path = require("node:path");
+const { randomUUID } = require("node:crypto");
+const resumeDirectory = path.join(__dirname, "../../uploads/resumes");
 const startOfToday = () => {
   const date = new Date();
   date.setUTCHours(0, 0, 0, 0);
@@ -12,6 +16,16 @@ const getProfile = async (req, res) => {
     where: { student_id: req.user.userId },
     include: {
       users: { select: { email: true, full_name: true, phone: true } },
+      resumes: {
+        select: {
+          resume_id: true,
+          file_name: true,
+          mime_type: true,
+          file_size_bytes: true,
+          uploaded_at: true,
+          is_primary: true,
+        },
+      },
     },
   });
   if (!profile)
@@ -19,6 +33,53 @@ const getProfile = async (req, res) => {
       status: 404,
     });
   res.json({ success: true, data: profile });
+};
+
+const uploadResume = async (req, res) => {
+  if (!req.file)
+    throw Object.assign(new Error("Resume file is required"), { status: 400 });
+  const extension = path.extname(req.file.originalname).toLowerCase();
+  const storageKey = `${randomUUID()}${extension}`;
+  await fs.mkdir(resumeDirectory, { recursive: true });
+  const filePath = path.join(resumeDirectory, storageKey);
+  await fs.writeFile(filePath, req.file.buffer, { flag: "wx" });
+  try {
+    const resume = await prisma.$transaction(async (tx) => {
+      await tx.resumes.updateMany({
+        where: { student_id: req.user.userId, is_primary: true },
+        data: { is_primary: false },
+      });
+      return tx.resumes.create({
+        data: {
+          student_id: req.user.userId,
+          file_name: path.basename(req.file.originalname),
+          storage_key: storageKey,
+          mime_type: req.file.mimetype,
+          file_size_bytes: req.file.size,
+          is_primary: true,
+        },
+        select: {
+          resume_id: true,
+          file_name: true,
+          mime_type: true,
+          file_size_bytes: true,
+          uploaded_at: true,
+        },
+      });
+    });
+    res.status(201).json({ success: true, data: resume });
+  } catch (error) {
+    await fs.unlink(filePath).catch(() => {});
+    throw error;
+  }
+};
+
+const removeResume = async (req, res) => {
+  await prisma.resumes.updateMany({
+    where: { student_id: req.user.userId, is_primary: true },
+    data: { is_primary: false },
+  });
+  res.json({ success: true, message: "Resume removed from profile" });
 };
 
 const updateProfile = async (req, res) => {
@@ -94,10 +155,15 @@ const applyToJob = async (req, res) => {
     throw Object.assign(new Error("You already applied to this job"), {
       status: 409,
     });
+  const resume = await prisma.resumes.findFirst({
+    where: { student_id: req.user.userId, is_primary: true },
+    select: { resume_id: true },
+  });
   const application = await prisma.applications.create({
     data: {
       job_id: jobId,
       student_id: req.user.userId,
+      resume_id: resume?.resume_id,
       cover_letter: req.body.cover_letter,
     },
   });
@@ -149,6 +215,8 @@ const dashboard = async (req, res) => {
 module.exports = {
   getProfile,
   updateProfile,
+  uploadResume,
+  removeResume,
   availableJobs,
   applyToJob,
   applications,

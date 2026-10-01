@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiRequest } from '../../utils/api'
+import { getUser } from '../../utils/auth'
 
 export default function Home() {
   const [featured, setFeatured] = useState([])
+  const user = getUser()
   useEffect(() => {
     apiRequest('/public/jobs').then(({ data }) => setFeatured(data.slice(0, 2))).catch(() => {})
   }, [])
@@ -15,11 +17,11 @@ export default function Home() {
         <p className="mt-2 text-gray-600">Career Connect is a campus placement portal connecting students, companies, and placement officers.</p>
         <div className="mt-4 space-x-3">
           <Link to="/jobs" className="bg-blue-600 text-white px-4 py-2 rounded">Browse Jobs</Link>
-          <Link to="/register" className="border px-4 py-2 rounded">Register</Link>
+          {!user && <Link to="/register" className="border px-4 py-2 rounded">Register</Link>}
         </div>
       </section>
 
-      <section className="mt-8">
+      <section className="mt-8 px-8">
         <h2 className="text-xl font-semibold">Featured Jobs</h2>
         <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
           {featured.length ? featured.map(job => (
@@ -33,7 +35,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mt-8 bg-white p-6 rounded shadow-sm">
+      <section className="mt-8 bg-white p-8 rounded shadow-sm">
         <h2 className="text-xl font-semibold">Featured Companies</h2>
         <p className="mt-4 text-gray-500">Registered companies appear here when available.</p>
       </section>

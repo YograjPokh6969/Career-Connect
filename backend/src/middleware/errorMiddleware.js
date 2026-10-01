@@ -8,6 +8,9 @@ const errorHandler = (error, req, res, next) => {
   if (error instanceof SyntaxError && error.type === "entity.parse.failed") {
     status = 400;
     message = "Request body must contain valid JSON";
+  } else if (error.code === "LIMIT_FILE_SIZE") {
+    status = 400;
+    message = "File too large (max 2MB)";
   } else if (error instanceof Prisma.PrismaClientKnownRequestError) {
     if (error.code === "P2002") {
       status = 409;

@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { getUser } from '../../utils/auth'
 import { apiRequest } from '../../utils/api'
 
 export default function Register() {
@@ -9,6 +10,13 @@ export default function Register() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const user = getUser()
+
+  useEffect(() => {
+    if (user) navigate(`/${user.role}/dashboard`, { replace: true })
+  }, [navigate, user])
+
+  if (user) return null
 
   const handleSubmit = async (e) => {
     e.preventDefault()

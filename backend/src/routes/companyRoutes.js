@@ -16,5 +16,9 @@ router.patch(
   "/applications/:applicationId/status",
   asyncHandler(controller.updateApplicationStatus),
 );
+router.get(
+  "/applications/:applicationId/resume",
+  asyncHandler(controller.downloadApplicantResume),
+);
 router.get("/dashboard", asyncHandler(controller.dashboard));
 module.exports = router;

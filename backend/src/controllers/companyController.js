@@ -1,4 +1,6 @@
 const prisma = require("../config/db");
+const path = require("node:path");
+const resumeDirectory = path.join(__dirname, "../../uploads/resumes");
 
 const getProfile = async (req, res) => {
   const profile = await prisma.company_profiles.findUnique({
@@ -215,6 +217,26 @@ const updateApplicationStatus = async (req, res) => {
     data: updated,
   });
 };
+const downloadApplicantResume = async (req, res) => {
+  const application = await prisma.applications.findFirst({
+    where: {
+      application_id: BigInt(req.params.applicationId),
+      job_postings: { company_id: req.user.userId },
+    },
+    include: { resumes: true },
+  });
+  if (!application || !application.resumes)
+    throw Object.assign(new Error("Resume not found for this application"), {
+      status: 404,
+    });
+  const filePath = path.join(
+    resumeDirectory,
+    path.basename(application.resumes.storage_key),
+  );
+  res.download(filePath, application.resumes.file_name, (error) => {
+    if (error && !res.headersSent) res.status(404).end();
+  });
+};
 const dashboard = async (req, res) => {
   const [profile, jobs, applicants] = await Promise.all([
     prisma.company_profiles.findUnique({
@@ -224,6 +246,14 @@ const dashboard = async (req, res) => {
     prisma.applications.findMany({
       where: { job_postings: { company_id: req.user.userId } },
       include: {
+        resumes: {
+          select: {
+            resume_id: true,
+            file_name: true,
+            file_size_bytes: true,
+            mime_type: true,
+          },
+        },
         student_profiles: {
           include: { users: { select: { full_name: true, email: true } } },
         },
@@ -243,5 +273,6 @@ module.exports = {
   deleteJob,
   applicants,
   updateApplicationStatus,
+  downloadApplicantResume,
   dashboard,
 };

@@ -16,7 +16,7 @@ export default function CompanyDashboard() {
     { label: 'Jobs Posted', value: jobs.length },
     { label: 'Applicants', value: applicants.length },
     { label: 'Shortlisted', value: applicants.filter(a => a.status === 'shortlisted').length },
-    { label: 'Interviews', value: 0 },
+    { label: 'Rejected', value: applicants.filter(a => a.status === 'rejected').length },
   ]
   const recent = applicants.slice(0, 5)
 

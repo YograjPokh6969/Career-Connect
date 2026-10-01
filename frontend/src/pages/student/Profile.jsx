@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import { getUser } from '../../utils/auth'
-import { getResumeFor, setResumeFor, removeResumeFor } from '../../utils/storage'
 import { apiRequest } from '../../utils/api'
 
 export default function StudentProfile() {
@@ -12,23 +10,21 @@ export default function StudentProfile() {
   const [message, setMessage] = useState('')
 
   useEffect(()=>{
-    const u = getUser()
-    if (!u) return
-    const email = u.email
-    getResumeFor(email)
-    setResume(getResumeFor(email))
     apiRequest('/students/profile')
-      .then(({ data }) => setStudent({
-        name: data.users.full_name,
-        email: data.users.email,
-        phone: data.users.phone,
-        university_roll_no: data.university_roll_no,
-        branch: data.department,
-        degree: data.degree,
-        cgpa: data.cgpa,
-        graduation: data.graduation_year,
-        skills: [],
-      }))
+      .then(({ data }) => {
+        setStudent({
+          name: data.users.full_name,
+          email: data.users.email,
+          phone: data.users.phone,
+          university_roll_no: data.university_roll_no,
+          branch: data.department,
+          degree: data.degree,
+          cgpa: data.cgpa,
+          graduation: data.graduation_year,
+          skills: [],
+        })
+        setResume(data.resumes?.is_primary ? data.resumes : null)
+      })
       .catch((requestError) => setError(requestError.message))
   }, [])
 
@@ -69,18 +65,27 @@ export default function StudentProfile() {
     if (!allowed.includes(f.type)) { setError('Only PDF/DOC/DOCX allowed'); return }
     const max = 2 * 1024 * 1024
     if (f.size > max) { setError('File too large (max 2MB)'); return }
-    const meta = { name: f.name, size: f.size, type: f.type, uploadedAt: new Date().toISOString() }
-    const email = student && student.email
-    if (!email) return
-    setResumeFor(email, meta)
-    setResume(meta)
+    const formData = new FormData()
+    formData.append('resume', f)
+    try {
+      const { data } = await apiRequest('/students/resume', {
+        method: 'POST',
+        body: formData,
+      })
+      setResume(data)
+      setMessage('Resume uploaded successfully.')
+    } catch (requestError) {
+      setError(requestError.message)
+    }
   }
 
-  const handleRemove = () => {
-    const email = student && student.email
-    if (!email) return
-    removeResumeFor(email)
-    setResume(null)
+  const handleRemove = async () => {
+    try {
+      await apiRequest('/students/resume', { method: 'DELETE' })
+      setResume(null)
+    } catch (requestError) {
+      setError(requestError.message)
+    }
   }
 
   if (!student) return null
@@ -131,7 +136,7 @@ export default function StudentProfile() {
         <label className="block text-sm text-gray-700 mb-2">Resume</label>
         {resume ? (
           <div className="flex items-center gap-4">
-            <div className="text-sm">{resume.name} · {(resume.size/1024).toFixed(1)} KB</div>
+            <div className="text-sm">{resume.file_name} · {(resume.file_size_bytes/1024).toFixed(1)} KB</div>
             <button onClick={handleRemove} className="text-sm text-red-600">Remove</button>
           </div>
         ) : (

@@ -19,6 +19,7 @@ export default function CompanyProfile() {
         industry: data.industry,
         description: data.description,
         officeAddress: data.office_address,
+        verificationStatus: data.verification_status,
       }))
       .catch((requestError) => setError(requestError.message))
   }, [])
@@ -72,7 +73,12 @@ export default function CompanyProfile() {
       </form> : <>
       <p><strong>Name:</strong> {company.name}</p>
       <p className="text-gray-600"><strong>Email:</strong> {company.email}</p>
+      <p className="text-gray-600"><strong>Contact:</strong> {company.contactName || 'Not provided'}</p>
+      <p className="text-gray-600"><strong>Phone:</strong> {company.phone || 'Not provided'}</p>
       <p className="text-gray-600"><strong>Website:</strong> {company.website || 'Not provided'}</p>
+      <p className="text-gray-600"><strong>Industry:</strong> {company.industry || 'Not provided'}</p>
+      <p className="text-gray-600"><strong>Office address:</strong> {company.officeAddress || 'Not provided'}</p>
+      <p className="text-gray-600"><strong>Verification status:</strong> {company.verificationStatus || 'Not available'}</p>
       <p className="mt-3">{company.description || 'No description provided.'}</p>
       </>}
 

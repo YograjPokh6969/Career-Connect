@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { setAuth } from '../../utils/auth'
+import { getUser, setAuth } from '../../utils/auth'
 import { apiRequest } from '../../utils/api'
 
 export default function Login() {
@@ -10,6 +10,7 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const user = getUser()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -49,13 +50,12 @@ export default function Login() {
           <select value={role} onChange={e=>setRole(e.target.value)} className="w-full border rounded px-3 py-2">
             <option value="student">Student</option>
             <option value="company">Company</option>
-            <option value="admin">Admin</option>
           </select>
         </div>
 
         <div className="flex items-center justify-between">
           <button disabled={loading} className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50">{loading ? 'Logging in...' : 'Login'}</button>
-          <Link to="/register" className="text-sm text-blue-600">Register</Link>
+          {!user && <Link to="/register" className="text-sm text-blue-600">Register</Link>}
         </div>
       </form>
     </div>

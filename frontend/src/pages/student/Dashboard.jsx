@@ -18,8 +18,7 @@ export default function StudentDashboard() {
   const stats = [
     { label: 'Jobs Applied', value: applications.length },
     { label: 'Shortlisted', value: applications.filter(a => a.status === 'shortlisted').length },
-    { label: 'Upcoming Interviews', value: 0 },
-    { label: 'Offers', value: applications.filter(a => a.status === 'selected').length },
+    { label: 'Rejected', value: applications.filter(a => a.status === 'rejected').length },
   ]
   const recent = applications.slice(0, 5)
 
@@ -28,7 +27,7 @@ export default function StudentDashboard() {
       <h1 className="text-2xl font-semibold mb-4">Student Dashboard</h1>
       {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {stats.map(s => (
           <div key={s.label} className="bg-white p-4 rounded shadow-sm border text-center">
             <div className="text-xl font-bold text-blue-600">{s.value}</div>
